@@ -116,7 +116,64 @@ def _mock_bridge_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple
     monkeypatch.setattr(ce, "_BRIDGE_LOCKFILE", bridge / "package-lock.json")
     monkeypatch.setattr(ce, "_SDK_MARKER", marker)
     monkeypatch.setattr(ce, "_BRIDGE_INSTALL_STAMP", stamp)
+    monkeypatch.setattr(ce, "_cursor_node_version_error", lambda: None)
     return bridge, stamp
+
+
+@pytest.mark.parametrize("version", ["v22.13.0", "v23.0.0", "v25.8.2"])
+def test_cursor_node_version_accepts_supported_versions(
+    version: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import reverse_api.cursor_engineer as ce
+
+    monkeypatch.setattr(ce.shutil, "which", lambda _: "/usr/bin/node")
+    with patch.object(ce.subprocess, "run", return_value=MagicMock(stdout=f"{version}\n")):
+        assert ce._cursor_node_version_error() is None
+
+
+@pytest.mark.parametrize("version", ["v18.17.0", "v22.12.9"])
+def test_cursor_node_version_rejects_unsupported_versions(
+    version: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import reverse_api.cursor_engineer as ce
+
+    monkeypatch.setattr(ce.shutil, "which", lambda _: "/usr/bin/node")
+    with patch.object(ce.subprocess, "run", return_value=MagicMock(stdout=f"{version}\n")):
+        error = ce._cursor_node_version_error()
+
+    assert error is not None
+    assert "requires Node.js 22.13+" in error
+    assert version.lstrip("v") in error
+
+
+def test_cursor_node_version_reports_missing_node(monkeypatch: pytest.MonkeyPatch) -> None:
+    import reverse_api.cursor_engineer as ce
+
+    monkeypatch.setattr(ce.shutil, "which", lambda _: None)
+    assert ce._cursor_node_version_error() == (
+        "node not found in PATH (Cursor SDK requires Node.js 22.13+)"
+    )
+
+
+def test_ensure_bridge_rejects_unsupported_node_before_current_fast_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import reverse_api.cursor_engineer as ce
+
+    bridge, stamp = _mock_bridge_paths(tmp_path, monkeypatch)
+    digest = hashlib.sha256((bridge / "package-lock.json").read_bytes()).hexdigest()
+    stamp.write_text(f"{digest}\n")
+    monkeypatch.setattr(
+        ce,
+        "_cursor_node_version_error",
+        lambda: "Cursor SDK requires Node.js 22.13+; found Node.js 22.12.9",
+    )
+
+    with patch.object(ce.subprocess, "run") as run:
+        error = _ensure_cursor_bridge_deps()
+
+    assert error == "Cursor SDK requires Node.js 22.13+; found Node.js 22.12.9"
+    run.assert_not_called()
 
 
 def test_ensure_bridge_skips_install_when_lock_stamp_matches(
