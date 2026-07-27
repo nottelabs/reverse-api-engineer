@@ -20,7 +20,6 @@ interface PageProps {
   params: Promise<{ slug?: string[] }>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mdxOptions: any = {
   parseFrontmatter: false,
   mdxOptions: {
