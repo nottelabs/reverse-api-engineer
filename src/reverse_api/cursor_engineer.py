@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 import shutil
@@ -16,15 +17,29 @@ from .tui import ClaudeUI
 
 _BRIDGE_DIR = Path(__file__).resolve().parent / "cursor_bridge"
 _BRIDGE_SCRIPT = _BRIDGE_DIR / "run.mjs"
+_BRIDGE_LOCKFILE = _BRIDGE_DIR / "package-lock.json"
 _SDK_MARKER = _BRIDGE_DIR / "node_modules" / "@cursor" / "sdk"
+_BRIDGE_INSTALL_STAMP = _BRIDGE_DIR / "node_modules" / ".rae-package-lock.sha256"
+
+
+def _bridge_lock_digest() -> str:
+    return hashlib.sha256(_BRIDGE_LOCKFILE.read_bytes()).hexdigest()
 
 
 def _ensure_cursor_bridge_deps() -> str | None:
     """Install npm dependencies for the bridge if missing. Returns error message or None."""
     if not _BRIDGE_SCRIPT.is_file():
         return "cursor bridge script missing (package incomplete)"
+    try:
+        lock_digest = _bridge_lock_digest()
+    except OSError as e:
+        return f"cursor bridge package-lock.json unavailable: {e}"
     if _SDK_MARKER.is_dir():
-        return None
+        try:
+            if _BRIDGE_INSTALL_STAMP.read_text().strip() == lock_digest:
+                return None
+        except OSError:
+            pass
     npm = shutil.which("npm")
     if not npm:
         return "npm not found in PATH (required to install @cursor/sdk for sdk=cursor)"
@@ -44,6 +59,10 @@ def _ensure_cursor_bridge_deps() -> str | None:
         return f"npm install in cursor_bridge failed: {e}"
     if not _SDK_MARKER.is_dir():
         return "@cursor/sdk did not install under cursor_bridge/node_modules"
+    try:
+        _BRIDGE_INSTALL_STAMP.write_text(f"{_bridge_lock_digest()}\n")
+    except OSError as e:
+        return f"failed to record cursor bridge dependency state: {e}"
     return None
 
 
