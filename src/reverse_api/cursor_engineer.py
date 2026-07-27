@@ -365,7 +365,7 @@ class CursorEngineer(BaseEngineer):
         if dep_err:
             self.ui.error(dep_err)
             self.message_store.save_error(dep_err)
-            self.ui.console.print("\n[dim]Set CURSOR_API_KEY and ensure Node.js 18+ and npm are installed.[/dim]")
+            self.ui.console.print("\n[dim]Set CURSOR_API_KEY and ensure Node.js 22.13+ and npm are installed.[/dim]")
             return None
 
         if not os.environ.get("CURSOR_API_KEY"):
