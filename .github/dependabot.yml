@@ -1,0 +1,54 @@
+version: 2
+
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+    assignees:
+      - "kalil0321"
+    groups:
+      python-security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+
+  - package-ecosystem: "npm"
+    directory: "/website"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+    assignees:
+      - "kalil0321"
+    groups:
+      website-security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+
+  - package-ecosystem: "npm"
+    directory: "/src/reverse_api/cursor_bridge"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+    assignees:
+      - "kalil0321"
+    groups:
+      cursor-bridge-security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+    assignees:
+      - "kalil0321"
+    groups:
+      actions-security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
