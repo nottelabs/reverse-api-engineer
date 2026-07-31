@@ -1,0 +1,57 @@
+name: E2E
+
+# Real-agent end-to-end run (tests/e2e/): a live Claude agent engineers a
+# client from a fixture HAR and verifies it against a local server. Costs
+# API tokens, so it runs nightly and on demand — never as a PR gate. Fork
+# PRs can't see the secret anyway; the key-detection step below makes the
+# workflow a clean no-op wherever ANTHROPIC_API_KEY isn't configured.
+
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  agent-e2e:
+    name: Agent E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Detect API key
+        id: key
+        run: echo "present=${{ secrets.ANTHROPIC_API_KEY != '' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Check out repository
+        if: steps.key.outputs.present == 'true'
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Install uv and Python
+        if: steps.key.outputs.present == 'true'
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Install dependencies
+        if: steps.key.outputs.present == 'true'
+        run: uv sync --locked --all-extras --dev
+
+      - name: Install Node.js
+        if: steps.key.outputs.present == 'true'
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "22"
+
+      - name: Install Claude Code CLI
+        if: steps.key.outputs.present == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run e2e suite
+        if: steps.key.outputs.present == 'true'
+        run: uv run --frozen pytest -q -m e2e tests/e2e
+        env:
+          RAE_E2E: "1"
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

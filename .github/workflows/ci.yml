@@ -11,8 +11,13 @@ permissions:
 
 jobs:
   python:
-    name: Python
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every interpreter the package classifiers advertise.
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - name: Check out repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -20,14 +25,23 @@ jobs:
       - name: Install uv and Python
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
-          python-version: "3.13"
+          python-version: ${{ matrix.python-version }}
           enable-cache: true
 
       - name: Install dependencies
         run: uv sync --locked --all-extras --dev
 
+      # The browser integration tests (tests/integration/test_browser_manual.py)
+      # need a real Chromium; one matrix entry is enough coverage for it and
+      # keeps the other jobs fast.
+      - name: Install Playwright Chromium
+        if: matrix.python-version == '3.13'
+        run: uv run --frozen playwright install --with-deps chromium
+
       - name: Run tests
         run: uv run --frozen pytest -q
+        env:
+          RAE_BROWSER_TESTS: ${{ matrix.python-version == '3.13' && '1' || '' }}
 
   website:
     name: Website

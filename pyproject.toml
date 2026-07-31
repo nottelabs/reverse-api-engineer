@@ -125,6 +125,9 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "e2e: real-agent end-to-end tests; cost tokens and need ANTHROPIC_API_KEY, opt-in via RAE_E2E=1 (see tests/e2e/)",
+]
 
 [tool.coverage.run]
 source = ["src/reverse_api"]
