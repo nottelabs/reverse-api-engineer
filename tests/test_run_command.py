@@ -255,12 +255,12 @@ class TestDiscoverScripts:
         for name in [
             "api_client.py", "api_client.js", "api_client.ts", "api_client.go",
             "api_client.java", "api_client.cs", "api_client.php",
-            "api_client.rb", "api_client.c",
+            "api_client.rb", "api_client.c", "api_client.psm1",
         ]:
             (scripts_dir_empty / name).write_text("")
         with patch("reverse_api.utils.get_base_output_dir", return_value=tmp_path):
             scripts = discover_scripts("abc123def456")
-        assert len(scripts) == 9
+        assert len(scripts) == 10
 
     def test_excludes_vendored_cjson(self, scripts_dir_empty, tmp_path):
         (scripts_dir_empty / "api_client.c").write_text("")
@@ -812,6 +812,14 @@ class TestBuildScriptCommands:
         script = tmp_path / "api_client.c"
         steps, _ = build_script_commands(script)
         assert steps[0] == ["cc", str(script), "-lcurl", "-o", str(tmp_path / "api_client")]
+
+    def test_powershell(self, tmp_path):
+        from reverse_api.utils import build_script_commands
+        script = tmp_path / "api_client.psm1"
+        steps, tool = build_script_commands(script, ("--flag",))
+        example = str(tmp_path / "Example.ps1")
+        assert steps == [["pwsh", "-NoProfile", "-File", example, "--flag"]]
+        assert tool == "pwsh"
 
     def test_unsupported_extension_raises(self, tmp_path):
         from reverse_api.utils import build_script_commands

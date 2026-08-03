@@ -482,6 +482,7 @@ class BaseEngineer(ABC):
             "php": "PHP",
             "ruby": "Ruby",
             "c": "C",
+            "powershell": "PowerShell",
         }.get(self.output_language, "Python")
 
     def _get_existing_client_guidance(self) -> str:
@@ -613,6 +614,24 @@ class BaseEngineer(ABC):
             cjson = self._quote_path(str(resolved / "cJSON.c"))
             binary = self._quote_path(str(resolved / "api_client"))
             return f"cc {source} {cjson} -lcurl -o {binary} && {binary}"
+        if self.output_language == "powershell":
+            # Unlike python/node/npx (which happily take a plain relative
+            # filename regardless of the agent's actual cwd, scripts_dir.
+            # parent.parent — see analyze_and_generate's ClaudeAgentOptions),
+            # the module itself (api_client.psm1) isn't runnable — the
+            # command targets the fixed companion Example.ps1, which Imports
+            # the module and calls its exported functions, the same
+            # project-file indirection used for Java's pom.xml and C#'s
+            # csproj. shlex.quote()-equivalent via _quote_path(), not manual
+            # double-quoting — output_dir (and so scripts_dir) isn't
+            # guaranteed free of shell metacharacters, and naive f'"{path}"'
+            # still lets $()/backticks expand inside double quotes.
+            # .resolve(): a relative --output-dir would otherwise be
+            # re-interpreted against the agent's cwd (scripts_dir.parent.
+            # parent) instead of the original cwd it was relative to,
+            # pointing -File at the wrong, doubly-nested location.
+            example = self._quote_path(str(self.scripts_dir.resolve() / "Example.ps1"))
+            return f"pwsh -NoProfile -File {example}"
         return {
             "python": "python api_client.py",
             "javascript": "node api_client.js",
@@ -751,6 +770,8 @@ class BaseEngineer(ABC):
                 f"\n3. `{self.scripts_dir}/cJSON.c` and `{self.scripts_dir}/cJSON.h` - "
                 "Vendored JSON library"
             )
+        elif self.output_language == "powershell":
+            return base + f"\n3. `{self.scripts_dir}/Example.ps1` - Imports the module and demonstrates usage"
         return base
 
     @abstractmethod

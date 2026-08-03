@@ -218,6 +218,10 @@ class TestBaseEngineerHelpers:
         """C extension."""
         eng = self._make_engineer(tmp_path, output_language="c")
         assert eng._get_output_extension() == ".c"
+    def test_get_output_extension_powershell(self, tmp_path):
+        """PowerShell extension."""
+        eng = self._make_engineer(tmp_path, output_language="powershell")
+        assert eng._get_output_extension() == ".psm1"
 
     def test_get_output_extension_unknown(self, tmp_path):
         """Unknown language defaults to .py."""
@@ -228,6 +232,11 @@ class TestBaseEngineerHelpers:
         """Client filename for Python."""
         eng = self._make_engineer(tmp_path, output_language="python")
         assert eng._get_client_filename() == "api_client.py"
+
+    def test_get_client_filename_powershell(self, tmp_path):
+        """Client filename for PowerShell."""
+        eng = self._make_engineer(tmp_path, output_language="powershell")
+        assert eng._get_client_filename() == "api_client.psm1"
 
     def test_get_client_filename_docs(self, tmp_path):
         """Client filename for docs mode."""
@@ -427,6 +436,38 @@ class TestBaseEngineerHelpers:
         assert tokens[2] == str(resolved / "cJSON.c")
         assert tokens[5] == str(resolved / "api_client")
 
+    def test_get_run_command_powershell(self, tmp_path):
+        """Run command for PowerShell points -File at this run's own
+        (resolved, shell-quoted) Example.ps1, not the module itself — the
+        agent's cwd is scripts_dir.parent.parent (see analyze_and_generate),
+        and api_client.psm1 isn't directly runnable, only importable."""
+        eng = self._make_engineer(tmp_path, output_language="powershell")
+        expected_example = shlex.quote(str(eng.scripts_dir.resolve() / "Example.ps1"))
+        assert eng._get_run_command() == f"pwsh -NoProfile -File {expected_example}"
+
+    def test_get_run_command_powershell_quotes_metacharacters(self, tmp_path):
+        """A scripts_dir containing shell metacharacters must round-trip
+        back to the literal path, not be left open to $()/backtick
+        expansion — what the naive f'"{path}"' approach got wrong."""
+        eng = self._make_engineer(tmp_path, output_language="powershell")
+        eng.scripts_dir = Path("/tmp/weird$(rm -rf ~) dir")
+        tokens = shlex.split(eng._get_run_command())
+        assert tokens[:3] == ["pwsh", "-NoProfile", "-File"]
+        assert tokens[3] == str(eng.scripts_dir.resolve() / "Example.ps1")
+
+    def test_get_run_command_powershell_resolves_relative_output_dir(self, tmp_path):
+        """A relative scripts_dir must be resolved to an absolute path before
+        being embedded in the command — otherwise, once the agent's cwd
+        moves to scripts_dir.parent.parent, the same relative string gets
+        re-interpreted from there and points at the wrong, doubly-nested
+        location."""
+        eng = self._make_engineer(tmp_path, output_language="powershell")
+        eng.scripts_dir = Path("relative_output/scripts/run123")
+        tokens = shlex.split(eng._get_run_command())
+        example_arg = tokens[3]
+        assert Path(example_arg).is_absolute()
+        assert example_arg == str(eng.scripts_dir.resolve() / "Example.ps1")
+
     def test_get_run_command_unknown(self, tmp_path):
         """Unknown language defaults to Python command."""
         eng = self._make_engineer(tmp_path, output_language="rust")
@@ -442,7 +483,7 @@ class TestBaseEngineerHelpers:
         review: an earlier version of this appended it here directly,
         which would have told every other backend's agent to call a tool
         that was never registered in its environment."""
-        for language in ("python", "javascript", "typescript", "go", "java", "csharp", "php", "ruby", "c"):
+        for language in ("python", "javascript", "typescript", "go", "java", "csharp", "php", "ruby", "c", "powershell"):
             eng = self._make_engineer(tmp_path, output_language=language, output_mode="client")
             assert REPORT_CLIENT_VERIFIED_INSTRUCTION not in eng._get_codegen_instructions(), language
 
@@ -540,6 +581,12 @@ class TestBaseEngineerBuildPrompt:
         system_prompt, user_message = eng._build_prompts()
         assert "C program" in system_prompt
         assert "libcurl" in system_prompt
+    def test_powershell_prompt(self, tmp_path):
+        """PowerShell prompt includes PowerShell-specific instructions."""
+        eng = self._make_engineer(tmp_path, output_language="powershell")
+        system_prompt, user_message = eng._build_prompts()
+        assert "PowerShell module" in system_prompt
+        assert "Invoke-RestMethod" in system_prompt
 
     def test_docs_prompt(self, tmp_path):
         """Docs mode prompt includes OpenAPI instructions."""

@@ -28,7 +28,7 @@ DEFAULT_CONFIG = {
     "ollama_auto_start": True,
     "ollama_base_url": "http://127.0.0.1:11434",
     "output_dir": None,  # None means use ~/.reverse-api/runs
-    "output_language": "python",  # "python", "javascript", "typescript", "go", "java", "csharp", "php", "ruby", or "c"
+    "output_language": "python",  # "python", "javascript", "typescript", "go", "java", "csharp", "php", "ruby", "c", or "powershell"
     "real_time_sync": True,  # Enable real-time file sync during engineering
     "sdk": "claude",  # "claude", "opencode", "copilot", or "cursor"
 }

@@ -11,7 +11,7 @@ import { StepBrowse, StepCapture, StepGenerate, StepReview } from '@/components/
 import { JsonLd } from '@/components/json-ld';
 
 const homeDescription =
-  'The agent that turns any website into a typed API client in nine languages — generated from the requests the site actually makes.';
+  'The agent that turns any website into a typed API client in ten languages — generated from the requests the site actually makes.';
 
 export const metadata: Metadata = {
   title: 'Turn websites into APIs',
@@ -60,7 +60,7 @@ const softwareJsonLd = {
   downloadUrl: pypiUrl,
   codeRepository: githubUrl,
   license: 'https://opensource.org/licenses/MIT',
-  programmingLanguage: ['Python', 'JavaScript', 'TypeScript', 'Go', 'Java', 'C#', 'PHP', 'Ruby', 'C'],
+  programmingLanguage: ['Python', 'JavaScript', 'TypeScript', 'Go', 'Java', 'C#', 'PHP', 'Ruby', 'C', 'PowerShell'],
   offers: {
     '@type': 'Offer',
     price: '0',

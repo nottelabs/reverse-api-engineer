@@ -15,7 +15,7 @@ export function GET() {
 
 > ${appTagline}
 
-${appName} is an open-source CLI that captures browser traffic — in the default agent mode via a browser MCP server (Playwright or Chrome DevTools) or the Vercel agent-browser CLI, or in manual mode via a local Playwright browser (optional \`[manual]\` extra) — and uses your configured AI SDK to generate a typed API client from the captured requests. Output languages: Python, JavaScript, TypeScript, Go, Java, C#, PHP, Ruby, and C.
+${appName} is an open-source CLI that captures browser traffic — in the default agent mode via a browser MCP server (Playwright or Chrome DevTools) or the Vercel agent-browser CLI, or in manual mode via a local Playwright browser (optional \`[manual]\` extra) — and uses your configured AI SDK to generate a typed API client from the captured requests. Output languages: Python, JavaScript, TypeScript, Go, Java, C#, PHP, Ruby, C, and PowerShell.
 
 ## Documentation
 
