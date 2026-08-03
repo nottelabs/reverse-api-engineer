@@ -972,7 +972,7 @@ class TestReportClientVerifiedTool:
         way, since it's appended in Python after loading whichever one."""
         from reverse_api.base_engineer import REPORT_CLIENT_VERIFIED_INSTRUCTION
 
-        for language in ("python", "javascript", "typescript", "go", "java", "csharp", "php", "ruby", "c"):
+        for language in ("python", "javascript", "typescript", "go", "java", "csharp", "php", "ruby", "c", "powershell"):
             eng = self._make_engineer(tmp_path, output_language=language, output_mode="client")
             assert eng._get_codegen_instructions().endswith(REPORT_CLIENT_VERIFIED_INSTRUCTION), language
 

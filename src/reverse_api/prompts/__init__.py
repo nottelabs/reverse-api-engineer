@@ -54,7 +54,8 @@ def load_language_partial(language: str, **kwargs: str) -> str:
     """Load the language-specific codegen instructions partial.
 
     Args:
-        language: One of "python", "javascript", "typescript", "go", "java", "csharp", "php", "ruby", "c".
+        language: One of "python", "javascript", "typescript", "go", "java", "csharp", "php", "ruby", "c",
+            "powershell".
         **kwargs: Placeholder values (scripts_dir, client_filename, run_command).
     """
     return load(f"partials/_language_{language}", **kwargs)

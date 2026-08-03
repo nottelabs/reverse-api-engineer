@@ -25,6 +25,7 @@ OUTPUT_LANGUAGE_EXTENSIONS = {
     "php": ".php",
     "ruby": ".rb",
     "c": ".c",
+    "powershell": ".psm1",
 }
 
 SCRIPT_EXTENSIONS = frozenset(OUTPUT_LANGUAGE_EXTENSIONS.values())
@@ -829,6 +830,13 @@ def build_script_commands(script: Path, script_args: tuple[str, ...] = ()) -> tu
             compile_cmd.append(str(cjson))
         compile_cmd += ["-lcurl", "-o", str(binary)]
         return [compile_cmd, [str(binary), *script_args]], "cc"
+    if suffix == ".psm1":
+        # A .psm1 is a module, not a runnable entry point — like Java/C#'s
+        # pom.xml/csproj, the actual command targets a fixed companion file
+        # (Example.ps1) that Imports the module and calls its exported
+        # functions, not the script argument itself.
+        example = d / "Example.ps1"
+        return [["pwsh", "-NoProfile", "-File", str(example), *script_args]], "pwsh"
     raise ValueError(f"unsupported script type: {script.name}")
 
 
