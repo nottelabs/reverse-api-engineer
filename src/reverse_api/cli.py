@@ -19,7 +19,7 @@ from questionary import Choice
 from rich.console import Console
 from rich.markup import escape
 
-from . import __version__
+from . import __version__, cloud
 from .config import DEFAULT_OPENCODE_MODEL, DEFAULT_OPENCODE_PROVIDER, ConfigManager
 from .engineer import run_reverse_engineering
 from .messages import MessageStore
@@ -768,6 +768,7 @@ def prompt_interactive_options(
         "/settings",
         "/history",
         "/messages",
+        "/cloud",
         "/help",
         "/exit",
         "/quit",
@@ -1075,6 +1076,8 @@ def repl_loop():
                     handle_settings(mode_color)
                 elif cmd == "/history":
                     handle_history(mode_color)
+                elif cmd == "/cloud":
+                    _print_cloud_overview()
                 elif cmd == "/help" or cmd == "/commands":
                     handle_help(mode_color)
                 elif cmd.startswith("/messages"):
@@ -1086,7 +1089,7 @@ def repl_loop():
                 else:
                     # Unknown command - show error and available commands
                     console.print(f" [red]Unknown command:[/red] {cmd}")
-                    console.print(" [dim]Available commands: /settings, /history, /messages, /help, /commands, /exit[/dim]")
+                    console.print(" [dim]Available commands: /settings, /history, /messages, /cloud, /help, /commands, /exit[/dim]")
                 continue
 
             mode = options.get("mode", "agent")
@@ -1186,6 +1189,7 @@ def _handle_settings_action(mode_color=THEME_PRIMARY) -> bool:
     choices = [
         Choice(title="Agent Provider", value="agent_provider"),
         Choice(title="Claude Code Model", value="claude_code_model"),
+        Choice(title="Cloud Suggestions", value="cloud_suggestions"),
         Choice(title="Copilot Model", value="copilot_model"),
         Choice(title="Cursor Model", value="cursor_model"),
         Choice(title="Cursor Web Search", value="cursor_web_search"),
@@ -1414,6 +1418,34 @@ def _handle_settings_action(mode_color=THEME_PRIMARY) -> bool:
             config_manager.set("cursor_web_search", pick)
             console.print(f" [dim]updated[/dim] cursor web search: {'on' if pick else 'off'}\n")
 
+    elif action == "cloud_suggestions":
+        console.print(
+            "    [dim]Before a capture, check whether anything.notte.cc already hosts a\n"
+            "    function for that site. Public lookup, no account. RAE_NO_CLOUD=1\n"
+            "    overrides this setting.[/dim]\n"
+        )
+        cloud_choices = [
+            Choice(title="Enabled", value=True),
+            Choice(title="Disabled", value=False),
+            Choice(title="Back", value="back"),
+        ]
+        choice = questionary.select(
+            "",
+            choices=cloud_choices,
+            pointer=">",
+            qmark="",
+            style=questionary.Style(
+                [
+                    ("pointer", f"fg:{mode_color} bold"),
+                    ("highlighted", f"fg:{mode_color} bold"),
+                ]
+            ),
+        ).ask()
+        if choice is not None and choice != "back":
+            config_manager.set("cloud_suggestions", choice)
+            status = "enabled" if choice else "disabled"
+            console.print(f"    [dim]updated[/dim] cloud suggestions: {status}\n")
+
     elif action == "real_time_sync":
         current = config_manager.get("real_time_sync", True)
         sync_choices = [
@@ -1557,6 +1589,10 @@ def handle_help(mode_color=THEME_PRIMARY):
     )
     commands_table.add_row("", "")
 
+    commands_table.add_row(
+        "/cloud",
+        "Show the hosted version and how to search its marketplace\n[dim]Usage: /cloud[/dim]",
+    )
     commands_table.add_row(
         "/help or /commands",
         "Show this help message\n[dim]Usage: /help[/dim]",
@@ -1802,6 +1838,100 @@ def agent(prompt, url, model, output_dir, no_interactive, as_json, json_stream, 
     sys.exit(0 if payload["status"] == "ok" else 1)
 
 
+@main.group(invoke_without_command=True)
+@click.pass_context
+def marketplace(ctx: click.Context):
+    """Browse ready-made API functions on the hosted marketplace.
+
+    The marketplace behind anything.notte.cc holds functions other people
+    already built. Searching it is public — no account, no API key — so it is
+    worth a look before reverse-engineering a site from scratch.
+    """
+    if ctx.invoked_subcommand is None:
+        _print_cloud_overview()
+
+
+@marketplace.command("search")
+@click.argument("query", required=False)
+@click.option(
+    "--site",
+    default=None,
+    help="Restrict to one site (URL or hostname). Only exact domain matches are returned.",
+)
+@click.option("--limit", "-n", default=5, show_default=True, help="Maximum results.")
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Emit results as a single JSON document on stdout.",
+)
+def marketplace_search(query, site, limit, as_json):
+    """Search the marketplace for an existing function.
+
+    \b
+    Examples:
+      reverse-api-engineer marketplace search "nfl standings"
+      reverse-api-engineer marketplace search --site https://www.nfl.com
+      reverse-api-engineer marketplace search instagram --json | jq
+    """
+    if not query and not site:
+        if as_json:
+            click.echo(json.dumps({"error": "provide a QUERY or --site", "results": []}))
+            sys.exit(2)
+        click.echo("error: provide a QUERY or --site", err=True)
+        sys.exit(2)
+
+    with console.status(" [dim]searching the marketplace...[/dim]", spinner="dots"):
+        if site:
+            matches = cloud.search_for_site(site, limit=limit)
+        else:
+            matches = cloud.search(query, limit=limit)
+
+    if as_json:
+        click.echo(
+            json.dumps(
+                {
+                    "query": query,
+                    "site": site,
+                    "count": len(matches),
+                    "marketplace_url": cloud.MARKETPLACE_URL,
+                    "results": [
+                        {
+                            "function_id": fn.function_id,
+                            "label": fn.label,
+                            "description": fn.description,
+                            "domain": fn.domain,
+                            "run_count": fn.run_count,
+                            "url": fn.url,
+                        }
+                        for fn in matches
+                    ],
+                }
+            )
+        )
+        return
+
+    if not matches:
+        console.print()
+        console.print(" [dim]no hosted function matches that yet[/dim]")
+        console.print(f" [dim]build one at {cloud.CLOUD_URL}, or capture it yourself with agent mode[/dim]")
+        console.print()
+        return
+
+    console.print()
+    for fn in matches:
+        console.print(
+            f" [white]{escape(fn.label)}[/white] [dim]{escape(fn.domain)} · {fn.run_count} runs[/dim]"
+        )
+        if fn.description:
+            desc = fn.description.replace("\n", " ").strip()
+            if len(desc) > 100:
+                desc = desc[:97] + "..."
+            console.print(f"   [dim]{escape(desc)}[/dim]")
+        console.print(f"   [dim]{fn.url}[/dim]")
+        console.print()
+
+
 @main.command(
     epilog="""\b
 Examples:
@@ -2003,6 +2133,105 @@ def run_collector(prompt=None, model=None, output_dir=None):
         }
 
 
+def _print_cloud_overview():
+    """Explain the hosted version. Backs both `/cloud` and the empty search."""
+    console.print()
+    console.print(f" [{THEME_SECONDARY}]anything[/{THEME_SECONDARY}] [dim]the hosted version of this tool[/dim]")
+    console.print(" [dim]describe the task, get a deployed API function instead of a local file[/dim]")
+    console.print()
+    console.print(f" [dim]home[/dim]        [white]{cloud.CLOUD_URL}[/white]")
+    console.print(f" [dim]marketplace[/dim] [white]{cloud.MARKETPLACE_URL}[/white] [dim]ready-made functions, no account needed[/dim]")
+    console.print(f" [dim]mcp[/dim]         [white]{cloud.MCP_URL}[/white] [dim]point an agent here to search and run them[/dim]")
+    console.print()
+    console.print(" [dim]search from here:[/dim] [white]reverse-api-engineer marketplace search <query>[/white]")
+    console.print()
+
+
+def _render_marketplace_matches(matches, *, domain: str):
+    """Show existing hosted functions for a site the user is about to capture."""
+    plural = "function" if len(matches) == 1 else "functions"
+    console.print()
+    console.print(
+        f" [{THEME_SECONDARY}]anything[/{THEME_SECONDARY}] [dim]already has[/dim] "
+        f"[white]{len(matches)}[/white] [dim]{plural} for[/dim] [white]{domain}[/white]"
+    )
+    for fn in matches:
+        console.print(f"   [dim]·[/dim] [white]{escape(fn.label)}[/white] [dim]({fn.run_count} runs)[/dim]")
+        if fn.description:
+            desc = fn.description.replace("\n", " ").strip()
+            if len(desc) > 96:
+                desc = desc[:93] + "..."
+            console.print(f"     [dim]{escape(desc)}[/dim]")
+        console.print(f"     [dim]{fn.url}[/dim]")
+    console.print()
+
+
+def _maybe_suggest_marketplace(url, *, interactive: bool) -> bool:
+    """Offer an existing hosted function before capturing a site from scratch.
+
+    Returns True when the user chose the marketplace instead, meaning the
+    caller should abandon the capture. Never raises: a lookup problem must not
+    cost someone their run.
+    """
+    if not url or not interactive:
+        return False
+    if not cloud.suggestions_enabled(config_manager):
+        return False
+
+    try:
+        domain = cloud.registrable_domain(url)
+        if not domain:
+            return False
+        # The lookup is usually instant but cold-starts at several seconds, so
+        # show a spinner rather than an unexplained pause. Ctrl+C skips it.
+        try:
+            with console.status(f" [dim]checking if {domain} is already covered...[/dim]", spinner="dots"):
+                matches = cloud.search_for_site(url)
+        except KeyboardInterrupt:
+            return False
+        if not matches:
+            return False
+
+        _render_marketplace_matches(matches, domain=domain)
+
+        # Default is No, so a bare enter carries on capturing — the suggestion
+        # is an offer, not a toll gate.
+        open_it = questionary.confirm(
+            "Open the marketplace instead of capturing?",
+            default=False,
+            qmark="",
+            style=questionary.Style([("question", "")]),
+        ).ask()
+    except Exception:
+        return False
+
+    if not open_it:
+        return False
+
+    target = cloud.cloud_link(matches[0].url, "cli_precapture")
+    console.print(f" [dim]opening[/dim] [white]{matches[0].url}[/white]")
+    try:
+        import webbrowser
+
+        webbrowser.open(target)
+    except Exception:
+        pass
+    console.print(" [dim]capture skipped[/dim]")
+    console.print()
+    return True
+
+
+def _print_cloud_deploy_hint():
+    """One quiet line after a successful capture, pointing at the hosted path."""
+    if not cloud.suggestions_enabled(config_manager):
+        return
+    console.print(
+        f" [dim]want this hosted, scheduled, and repaired when the site changes? "
+        f"{cloud.CLOUD_URL}[/dim]"
+    )
+    console.print()
+
+
 def run_auto_capture(
     prompt=None,
     url=None,
@@ -2028,6 +2257,11 @@ def run_auto_capture(
         prompt = options["prompt"]
         url = options.get("url")
         model = options["model"]
+
+    # Before burning a capture run, check whether the site is already covered
+    # by a hosted function. Skipped entirely when non-interactive or headless.
+    if _maybe_suggest_marketplace(url, interactive=interactive and not headless):
+        return None
 
     if agent_provider == "chrome-mcp" and not headless:
         console.print()
@@ -2188,6 +2422,8 @@ def run_auto_capture(
                 usage=result.get("usage", {}),
                 paths={"script_path": result.get("script_path")},
             )
+            if interactive and not interrupted and result.get("script_path"):
+                _print_cloud_deploy_hint()
 
         return {
             "run_id": run_id,

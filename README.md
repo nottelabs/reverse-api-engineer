@@ -59,6 +59,12 @@ Reverse API Engineer stays what it is: local, MIT, no account required, and the
 client it generates is yours to keep. Reach for the cloud when you'd rather not
 own the maintenance.
 
+Because a capture run costs time and tokens, agent mode checks the marketplace
+for the target site first and tells you when something already exists — press
+enter to carry on capturing anyway. The lookup is anonymous, needs no account,
+and only ever reports functions whose own domain matches your target. Turn it
+off with `RAE_NO_CLOUD=1` or **Cloud Suggestions** in `/settings`.
+
 ## Install
 
 ```bash
@@ -121,6 +127,7 @@ Settings live in `~/.reverse-api/config.json` and can be edited via `/settings` 
   "agent_browser_npx_package": "agent-browser@0",
   "agent_browser_notes": "",
   "claude_code_model": "claude-sonnet-4-6",
+  "cloud_suggestions": true,
   "collector_model": "claude-sonnet-4-6",
   "ollama_auto_start": true,
   "ollama_base_url": "http://127.0.0.1:11434",
@@ -150,6 +157,7 @@ Slash commands inside the CLI:
 - `/settings`: configure model, SDK, agent provider, and sync settings.
 - `/history`: list past runs with timestamps, costs, and status.
 - `/messages <run_id>`: view detailed message logs for a run.
+- `/cloud`: show the hosted version and how to search its marketplace.
 - `/help` (alias: `/commands`): show the command list.
 - `/exit` (alias: `/quit`): leave the CLI.
 
@@ -161,6 +169,10 @@ reverse-api-engineer agent --prompt "capture the public jobs api" \
 
 reverse-api-engineer list --json
 reverse-api-engineer show <run_id> --json
+
+# Check whether a hosted function already covers a site (public, no account).
+reverse-api-engineer marketplace search --site https://www.nfl.com
+reverse-api-engineer marketplace search "nfl standings" --json | jq
 reverse-api-engineer run <run_id> --file api_client.py \
   --no-interactive --auto-install -- --org acme
 ```
