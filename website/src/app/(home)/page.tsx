@@ -6,6 +6,7 @@ import { appName, appTagline, cloudHost, cloudLink, cloudUrl, gitConfig, githubU
 import { InstallCommand } from '@/components/install-command';
 import { BuiltInTheOpen } from '@/components/built-in-the-open';
 import { WorksWithAgents } from '@/components/works-with-agents';
+import { LocalOrHosted } from '@/components/local-or-hosted';
 import { Reveal } from '@/components/reveal';
 import { StepBrowse, StepCapture, StepGenerate, StepReview } from '@/components/step-illustrations';
 import { JsonLd } from '@/components/json-ld';
@@ -81,6 +82,7 @@ export default function HomePage() {
       <HowItWorks />
       <WorksWithAgents />
       <BuiltInTheOpen />
+      <LocalOrHosted />
       <FinalCTA />
     </main>
   );

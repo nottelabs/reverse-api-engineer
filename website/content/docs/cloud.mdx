@@ -1,0 +1,107 @@
+---
+title: Hosted version
+description: When to use Anything, the managed version of Reverse API Engineer, and how the CLI talks to its marketplace.
+---
+
+[Anything](https://anything.notte.cc?utm_source=rae&utm_medium=docs&utm_campaign=cloud_page)
+is the hosted version of this project. Same job — *describe the task, we
+engineer the skill* — but you get back a deployed API function instead of a
+file on your disk.
+
+Reverse API Engineer is not going anywhere, and it is not a trial. It stays
+local, MIT, and account-free, and the client it generates is yours to keep.
+The two just fail differently, and the difference is who owns the maintenance.
+
+## Which one you want
+
+|                    | Reverse API Engineer  | Anything                    |
+| ------------------ | --------------------- | --------------------------- |
+| You get            | a client in your repo | a callable endpoint         |
+| Runs on            | your machine          | hosted browsers             |
+| When the site changes | you re-run the capture | re-engineered for you    |
+| Setup              | install the CLI       | an API key                  |
+| Cost               | your model tokens     | per run                     |
+| Works offline      | yes                   | no                          |
+| Authenticated sites | your own session     | your credentials, hosted    |
+
+Stay local when the client belongs in your repository, when it has to run
+inside your own network, when the target needs your logged-in browser session,
+or when you want to read every line before it runs.
+
+Go hosted when you want an endpoint rather than a file, when you would rather
+not own the repair work each time a site shifts, or when an agent needs to
+reach hundreds of sites without you building each one by hand.
+
+## Check before you capture
+
+A capture run costs time and tokens, and the marketplace already holds
+hundreds of functions. So in agent mode the CLI looks first:
+
+```
+ anything already has 3 functions for nfl.com
+   · get_current_nfl_week (8 runs)
+     Returns the NFL season, week number, season and week types...
+     https://anything.notte.cc/marketplace/b9d2b07c-935c-44d6-84af-706f786f3455
+
+? Open the marketplace instead of capturing? (y/N)
+```
+
+Press enter and the capture proceeds as normal. It is an offer, not a gate.
+
+The lookup is anonymous — the marketplace search endpoint is public, so no key
+or account is involved — and it only ever reports functions whose own domain
+matches your target. The endpoint ranks rather than filters, so a site it has
+never seen still returns other people's functions; the CLI discards those
+rather than showing you an irrelevant suggestion.
+
+<Callout title="Turning it off">
+  Set `RAE_NO_CLOUD=1` to disable the network call entirely, or switch
+  **Cloud Suggestions** off in `/settings`. The environment variable wins over
+  the setting, so CI and scripted wrappers can opt out without touching a
+  user's config file. The lookup is also skipped whenever the CLI is
+  non-interactive or headless, so `--json`, `--json-stream`, and
+  `--no-interactive` are unaffected.
+</Callout>
+
+## Searching from the CLI
+
+You can query the marketplace directly, without starting a capture:
+
+```bash
+# Everything that covers one site. Only exact domain matches are returned.
+reverse-api-engineer marketplace search --site https://www.nfl.com
+
+# Or search by what you want to do.
+reverse-api-engineer marketplace search "nfl standings"
+
+# Scriptable.
+reverse-api-engineer marketplace search instagram --json | jq '.results[].label'
+```
+
+`/cloud` inside the REPL prints the same set of links.
+
+## From an agent
+
+Point any MCP client at the hosted endpoint and your agent searches the
+catalogue itself, before it builds anything:
+
+```json
+{
+  "mcpServers": {
+    "anything": {
+      "url": "https://anything.notte.cc/mcp"
+    }
+  }
+}
+```
+
+The server exposes `search` without authentication, plus `spec`, `run`, and
+`build` once a key is supplied. `build` takes a plain-English description and
+deploys a new function — the hosted equivalent of a capture run.
+
+## Worked comparison
+
+The [`examples/hosted`](https://github.com/kalil0321/reverse-api-engineer/tree/main/examples/hosted)
+folder runs the same job all three ways — local capture, hosted over HTTP, and
+hosted over MCP — with two dependency-free scripts you can run yourself.
+`discover.py` needs no credentials at all.

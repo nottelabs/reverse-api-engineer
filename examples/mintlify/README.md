@@ -225,3 +225,25 @@ This client should work with any documentation site using Mintlify's AI assistan
 ## License
 
 MIT License - Feel free to use and modify.
+
+---
+
+## Don't want to maintain this?
+
+This client was reverse-engineered locally and is yours to keep — but it is
+pinned to mintlify.com's API as it looked on the day of capture, and nothing here
+re-engineers it when that changes.
+
+[Anything](https://anything.notte.cc?utm_source=rae&utm_medium=example&utm_campaign=mintlify)
+is the hosted version of this project: you describe the task and get back a
+deployed API function, with the proxies, retries, and repair-on-change handled
+for you. Check whether Mintlify-hosted docs sites is already covered before building anything:
+
+```bash
+reverse-api-engineer marketplace search --site mintlify.com
+```
+
+If nothing matches yet, describe the task at
+[anything.notte.cc](https://anything.notte.cc?utm_source=rae&utm_medium=example&utm_campaign=mintlify)
+and it gets built for you. Agents can search the same catalogue by pointing an
+MCP client at `https://anything.notte.cc/mcp`.

@@ -319,3 +319,25 @@ For questions or issues, please open an issue in the repository.
 
 **Generated**: 2025-12-22
 **HAR Analysis ID**: 0c786aa76c2f
+
+---
+
+## Don't want to maintain this?
+
+This client was reverse-engineered locally and is yours to keep — but it is
+pinned to uber.com's API as it looked on the day of capture, and nothing here
+re-engineers it when that changes.
+
+[Anything](https://anything.notte.cc?utm_source=rae&utm_medium=example&utm_campaign=uber)
+is the hosted version of this project: you describe the task and get back a
+deployed API function, with the proxies, retries, and repair-on-change handled
+for you. Check whether Uber's job board is already covered before building anything:
+
+```bash
+reverse-api-engineer marketplace search --site uber.com
+```
+
+If nothing matches yet, describe the task at
+[anything.notte.cc](https://anything.notte.cc?utm_source=rae&utm_medium=example&utm_campaign=uber)
+and it gets built for you. Agents can search the same catalogue by pointing an
+MCP client at `https://anything.notte.cc/mcp`.
