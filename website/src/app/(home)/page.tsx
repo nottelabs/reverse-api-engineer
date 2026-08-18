@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 import type { Metadata } from 'next';
 import { ArrowRightIcon } from 'lucide-react';
-import { appName, appTagline, gitConfig, githubUrl, pypiUrl, siteUrl } from '@/lib/shared';
+import { appName, appTagline, cloudHost, cloudLink, cloudUrl, gitConfig, githubUrl, pypiUrl, siteUrl } from '@/lib/shared';
 import { InstallCommand } from '@/components/install-command';
 import { BuiltInTheOpen } from '@/components/built-in-the-open';
 import { WorksWithAgents } from '@/components/works-with-agents';
@@ -146,6 +146,20 @@ function Hero() {
               View on GitHub
             </Link>
           </div>
+
+          {/* Hosted escape hatch. Deliberately quiet — the OSS CLI is the
+              headline; this is for people who don't want to run anything. */}
+          <p className="la-rise -mt-4 text-sm text-ink-soft" style={{ '--d': '0.8s' } as CSSProperties}>
+            Rather not run it yourself?{' '}
+            <Link
+              href={cloudLink(cloudUrl, 'home_hero')}
+              target="_blank"
+              className="text-fd-primary underline decoration-fd-primary/45 decoration-1 underline-offset-[3px] hover:bg-fd-primary/[0.18] rounded px-1 -mx-1 transition-colors"
+            >
+              {cloudHost}
+            </Link>{' '}
+            is the hosted version.
+          </p>
         </div>
       </Reveal>
     </section>

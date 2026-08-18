@@ -1,11 +1,13 @@
 import Link from 'next/link';
-import { githubUrl, pypiUrl, gitConfig } from '@/lib/shared';
+import { cloudLink, cloudMarketplaceUrl, cloudUrl, githubUrl, pypiUrl, gitConfig } from '@/lib/shared';
 
 const LINKS = [
   { label: 'Documentation', href: '/docs' },
   { label: 'Quick start', href: '/docs/quick-start' },
   { label: 'GitHub', href: githubUrl, external: true },
   { label: 'PyPI', href: pypiUrl, external: true },
+  { label: 'Hosted version', href: cloudLink(cloudUrl, 'footer'), external: true },
+  { label: 'Marketplace', href: cloudLink(cloudMarketplaceUrl, 'footer'), external: true },
 ];
 
 export function SiteFooter() {

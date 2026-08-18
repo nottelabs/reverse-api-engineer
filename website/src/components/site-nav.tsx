@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { PackageIcon, BookOpenIcon } from 'lucide-react';
-import { githubUrl, pypiUrl } from '@/lib/shared';
+import { PackageIcon, BookOpenIcon, CloudIcon } from 'lucide-react';
+import { cloudLink, cloudUrl, githubUrl, pypiUrl } from '@/lib/shared';
 import { ThemeToggle } from './theme-toggle';
 
 function GithubIcon({ className }: { className?: string }) {
@@ -46,6 +46,15 @@ export function SiteNav() {
           >
             <BookOpenIcon className="size-4" />
             <span className="hidden sm:inline">Docs</span>
+          </Link>
+          <Link
+            href={cloudLink(cloudUrl, 'nav')}
+            target="_blank"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-ink-soft hover:text-ink transition-colors"
+            aria-label="Anything, the hosted version"
+          >
+            <CloudIcon className="size-4" />
+            <span className="hidden sm:inline">Cloud</span>
           </Link>
           <Link
             href={pypiUrl}

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAllDocPages } from '@/lib/docs';
-import { appName, appTagline, siteUrl, githubUrl, pypiUrl } from '@/lib/shared';
+import { appName, appTagline, siteUrl, githubUrl, pypiUrl, cloudUrl, cloudMarketplaceUrl, cloudMcpUrl } from '@/lib/shared';
 
 export const dynamic = 'force-static';
 
@@ -25,6 +25,9 @@ export function GET() {
 Repository: ${githubUrl}
 PyPI: ${pypiUrl}
 License: MIT
+
+Hosted version: ${cloudUrl} (marketplace: ${cloudMarketplaceUrl}, MCP: ${cloudMcpUrl}).
+Search the marketplace before reverse-engineering a site from scratch.
 
 This file concatenates every documentation page in raw MDX. Use it to give
 an LLM full context on the project in a single prompt.

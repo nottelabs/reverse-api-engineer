@@ -75,6 +75,7 @@ copilot = [
 [project.urls]
 Homepage = "https://reverseapi.dev"
 Documentation = "https://reverseapi.dev/docs"
+Cloud = "https://anything.notte.cc"
 Repository = "https://github.com/kalil0321/reverse-api-engineer"
 Issues = "https://github.com/kalil0321/reverse-api-engineer/issues"
 Changelog = "https://github.com/kalil0321/reverse-api-engineer/blob/main/CHANGELOG.md"
