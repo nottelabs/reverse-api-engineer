@@ -4,6 +4,7 @@
   <a href="https://pypi.org/project/reverse-api-engineer/"><img src="https://img.shields.io/pypi/v/reverse-api-engineer?style=flat&color=e50d75&labelColor=1f1f1f" alt="PyPI"></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11+-e50d75?style=flat&labelColor=1f1f1f" alt="Python"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-e50d75?style=flat&labelColor=1f1f1f" alt="License"></a>
+  <a href="https://anything.notte.cc?utm_source=rae&utm_medium=readme&utm_campaign=badge"><img src="https://img.shields.io/badge/hosted-anything.notte.cc-e50d75?style=flat&labelColor=1f1f1f" alt="Anything API"></a>
   <br>
 
 [![Greptile: The War on Bugs](https://www.greptile.com/badge.svg)](https://www.greptile.com/?utm_source=oss_badge&utm_medium=readme&utm_campaign=greptile_for_open_source)
@@ -37,6 +38,27 @@
 
 No more manually opening DevTools, copying cURL commands, and gluing together a client.
 
+## Hosted version
+
+[**anything.notte.cc**](https://anything.notte.cc?utm_source=rae&utm_medium=readme&utm_campaign=hosted_section)
+is the managed version of the same idea — *describe the task, we engineer the
+skill*. You get back a deployed API function instead of a local file, with the
+proxies, retries, and re-engineering-when-the-site-changes handled for you.
+
+Two reasons to look there before capturing anything locally:
+
+- **It may already exist.** The
+  [marketplace](https://anything.notte.cc/marketplace?utm_source=rae&utm_medium=readme&utm_campaign=hosted_section)
+  has 950+ ready-made functions across 400+ sites — job boards, retailers,
+  social, finance, sports, public data. Browsing needs no account.
+- **Your agent can call it directly.** Point any MCP client at
+  `https://anything.notte.cc/mcp` and it searches that marketplace before it
+  builds anything.
+
+Reverse API Engineer stays what it is: local, MIT, no account required, and the
+client it generates is yours to keep. Reach for the cloud when you'd rather not
+own the maintenance.
+
 ## Install
 
 ```bash
@@ -62,6 +84,10 @@ reverse-api-engineer
 # Browser opens. Navigate, interact, close when done.
 # → ./scripts/apple_jobs_api/  (api_client.py, README.md, example_usage.py)
 ```
+
+> Before you capture: someone may have already done it. Search the
+> [Anything marketplace](https://anything.notte.cc/marketplace?utm_source=rae&utm_medium=readme&utm_campaign=quick_start)
+> for your target site and skip straight to a hosted endpoint.
 
 Cycle modes with **Shift+Tab**:
 
