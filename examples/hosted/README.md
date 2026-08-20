@@ -52,9 +52,10 @@ python discover.py nfl.com
     https://anything.notte.cc/marketplace/365309fa-acb6-4226-b410-9a5f86fb72d9
 ```
 
-`discover.py` filters by domain rather than trusting the ranking, because the
-endpoint ranks instead of filtering: query a site it has never seen and it
-still returns a page of other people's functions.
+`discover.py` passes the site straight through as `base_url`, which scopes
+the search server-side. Any form works — a bare hostname, a full URL, or a
+glob like `*.nfl.*` — and subdomains are covered. Add a query alongside it to
+narrow further: the two filters compose.
 
 Then run one. This part needs a key from
 [console.notte.cc](https://console.notte.cc):

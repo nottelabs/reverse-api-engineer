@@ -49,10 +49,9 @@ hundreds of functions. So in agent mode the CLI looks first:
 Press enter and the capture proceeds as normal. It is an offer, not a gate.
 
 The lookup is anonymous — the marketplace search endpoint is public, so no key
-or account is involved — and it only ever reports functions whose own domain
-matches your target. The endpoint ranks rather than filters, so a site it has
-never seen still returns other people's functions; the CLI discards those
-rather than showing you an irrelevant suggestion.
+or account is involved — and it only ever reports functions that belong to your
+target site. The endpoint scopes by site server-side, and the CLI re-checks the
+domain on the way back, because an irrelevant suggestion is worse than none.
 
 <Callout title="Turning it off">
   Set `RAE_NO_CLOUD=1` to disable the network call entirely, or switch
@@ -68,11 +67,15 @@ rather than showing you an irrelevant suggestion.
 You can query the marketplace directly, without starting a capture:
 
 ```bash
-# Everything that covers one site. Only exact domain matches are returned.
+# Everything that covers one site. A full URL, bare host, or glob all work.
 reverse-api-engineer marketplace search --site https://www.nfl.com
 
 # Or search by what you want to do.
 reverse-api-engineer marketplace search "nfl standings"
+
+# Filters compose, and categories are their own axis.
+reverse-api-engineer marketplace search "standings" --site nfl.com
+reverse-api-engineer marketplace search --category Jobs
 
 # Scriptable.
 reverse-api-engineer marketplace search instagram --json | jq '.results[].label'

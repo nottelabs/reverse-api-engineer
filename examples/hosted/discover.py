@@ -17,29 +17,32 @@ SEARCH_ENDPOINT = "https://anything.notte.cc/api/marketplace/search"
 MARKETPLACE_URL = "https://anything.notte.cc/marketplace"
 
 
-def search(query: str, limit: int = 5) -> list[dict]:
-    """Return marketplace functions matching `query`.
+def search(query: str | None = None, base_url: str | None = None, limit: int = 5) -> list[dict]:
+    """Return marketplace functions matching `query`, `base_url`, or both.
 
-    The endpoint ranks rather than filters, so a query it cannot match still
-    comes back full of unrelated functions. Filter by domain yourself when you
-    are asking "does this specific site have coverage?" — see
-    `functions_for_site` below.
+    `base_url` scopes to one site and understands any form it is written in:
+    a bare hostname, a full URL, or a glob like `*.nfl.*`. `query` ranks
+    within whatever is left. The two compose.
     """
-    url = f"{SEARCH_ENDPOINT}?{urlencode({'q': query, 'limit': limit})}"
+    params = {"limit": limit}
+    if query:
+        params["q"] = query
+    if base_url:
+        params["base_url"] = base_url
+
+    url = f"{SEARCH_ENDPOINT}?{urlencode(params)}"
     with urlopen(Request(url, headers={"User-Agent": "anything-example"}), timeout=15) as response:
         payload = json.load(response)
     return payload.get("results", [])
 
 
-def functions_for_site(domain: str, limit: int = 5) -> list[dict]:
-    """Return only the functions that genuinely belong to `domain`."""
-    domain = domain.lower().removeprefix("www.")
-    matches = [
-        fn
-        for fn in search(domain, limit=20)
-        if (fn.get("domain") or "").lower() == domain or (fn.get("domain") or "").lower().endswith(f".{domain}")
-    ]
-    matches.sort(key=lambda fn: fn.get("run_count", 0), reverse=True)
+def functions_for_site(site: str, limit: int = 5) -> list[dict]:
+    """Return the functions that belong to one site, most-run first."""
+    matches = sorted(
+        search(base_url=site, limit=limit),
+        key=lambda fn: fn.get("run_count", 0),
+        reverse=True,
+    )
     return matches[:limit]
 
 
