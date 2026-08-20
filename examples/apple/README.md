@@ -407,3 +407,25 @@ print(json.dumps(results, indent=2, ensure_ascii=False))
 ```
 
 Save this as `quick_example.py` and run it to get started immediately!
+
+---
+
+## Don't want to maintain this?
+
+This client was reverse-engineered locally and is yours to keep — but it is
+pinned to jobs.apple.com's API as it looked on the day of capture, and nothing here
+re-engineers it when that changes.
+
+[Anything](https://anything.notte.cc?utm_source=rae&utm_medium=example&utm_campaign=apple)
+is the hosted version of this project: you describe the task and get back a
+deployed API function, with the proxies, retries, and repair-on-change handled
+for you. Check whether Apple's careers site is already covered before building anything:
+
+```bash
+reverse-api-engineer marketplace search --site jobs.apple.com
+```
+
+If nothing matches yet, describe the task at
+[anything.notte.cc](https://anything.notte.cc?utm_source=rae&utm_medium=example&utm_campaign=apple)
+and it gets built for you. Agents can search the same catalogue by pointing an
+MCP client at `https://anything.notte.cc/mcp`.

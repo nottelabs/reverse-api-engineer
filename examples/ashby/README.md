@@ -700,3 +700,25 @@ Please document and share your findings.
 ## Contact
 
 For questions about this reverse engineering project, refer to the HAR analysis source file.
+
+---
+
+## Don't want to maintain this?
+
+This client was reverse-engineered locally and is yours to keep — but it is
+pinned to jobs.ashbyhq.com's API as it looked on the day of capture, and nothing here
+re-engineers it when that changes.
+
+[Anything](https://anything.notte.cc?utm_source=rae&utm_medium=example&utm_campaign=ashby)
+is the hosted version of this project: you describe the task and get back a
+deployed API function, with the proxies, retries, and repair-on-change handled
+for you. Check whether Ashby-hosted job boards is already covered before building anything:
+
+```bash
+reverse-api-engineer marketplace search --site jobs.ashbyhq.com
+```
+
+If nothing matches yet, describe the task at
+[anything.notte.cc](https://anything.notte.cc?utm_source=rae&utm_medium=example&utm_campaign=ashby)
+and it gets built for you. Agents can search the same catalogue by pointing an
+MCP client at `https://anything.notte.cc/mcp`.
