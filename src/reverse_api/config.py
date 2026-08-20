@@ -12,6 +12,10 @@ DEFAULT_CONFIG = {
     "agent_browser_notes": "",  # extra instructions merged into agent-browser prompt / RAE_AGENT_BROWSER_NOTES env
     "agent_browser_npx_package": "agent-browser@0",
     "claude_code_model": "claude-sonnet-4-6",
+    # Look up the Anything marketplace before a capture, so users are told when
+    # the API they are about to reverse-engineer already exists. Also honours
+    # the RAE_NO_CLOUD env var, which wins over this setting.
+    "cloud_suggestions": True,
     "collector_model": "claude-sonnet-4-6",  # Model for collector mode
     "cursor_model": "composer-2.5",  # Model id for Cursor SDK (see Cursor.models.list())
     # When True, local agents load broader Cursor setting layers (plugins/team) so WebFetch/WebSearch

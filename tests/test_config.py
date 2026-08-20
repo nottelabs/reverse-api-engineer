@@ -146,6 +146,7 @@ class TestDefaultConfig:
             "agent_browser_notes",
             "agent_browser_npx_package",
             "claude_code_model",
+            "cloud_suggestions",
             "collector_model",
             "copilot_model",
             "cursor_model",
