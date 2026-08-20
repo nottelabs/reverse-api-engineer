@@ -1858,6 +1858,11 @@ def marketplace(ctx: click.Context):
     default=None,
     help="Restrict to one site (URL or hostname). Only exact domain matches are returned.",
 )
+@click.option(
+    "--category",
+    default=None,
+    help="Restrict to one marketplace category, e.g. Jobs, Finance, E-commerce.",
+)
 @click.option("--limit", "-n", default=5, show_default=True, help="Maximum results.")
 @click.option(
     "--json",
@@ -1865,27 +1870,29 @@ def marketplace(ctx: click.Context):
     is_flag=True,
     help="Emit results as a single JSON document on stdout.",
 )
-def marketplace_search(query, site, limit, as_json):
+def marketplace_search(query, site, category, limit, as_json):
     """Search the marketplace for an existing function.
 
     \b
     Examples:
       reverse-api-engineer marketplace search "nfl standings"
       reverse-api-engineer marketplace search --site https://www.nfl.com
+      reverse-api-engineer marketplace search --category Jobs
       reverse-api-engineer marketplace search instagram --json | jq
     """
-    if not query and not site:
+    if not query and not site and not category:
         if as_json:
-            click.echo(json.dumps({"error": "provide a QUERY or --site", "results": []}))
+            click.echo(json.dumps({"error": "provide a QUERY, --site, or --category", "results": []}))
             sys.exit(2)
-        click.echo("error: provide a QUERY or --site", err=True)
+        click.echo("error: provide a QUERY, --site, or --category", err=True)
         sys.exit(2)
 
     with console.status(" [dim]searching the marketplace...[/dim]", spinner="dots"):
-        if site:
+        if site and not query and not category:
+            # Domain-only lookups get the extra no-wrong-site guard.
             matches = cloud.search_for_site(site, limit=limit)
         else:
-            matches = cloud.search(query, limit=limit)
+            matches = cloud.search(query, base_url=site, category=category, limit=limit)
 
     if as_json:
         click.echo(
@@ -1893,6 +1900,7 @@ def marketplace_search(query, site, limit, as_json):
                 {
                     "query": query,
                     "site": site,
+                    "category": category,
                     "count": len(matches),
                     "marketplace_url": cloud.MARKETPLACE_URL,
                     "results": [

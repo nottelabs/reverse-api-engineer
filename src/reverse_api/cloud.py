@@ -117,13 +117,35 @@ def registrable_domain(url_or_host: str) -> str | None:
     return ".".join(labels[-2:])
 
 
-def search(query: str, *, limit: int = 5, timeout: float = DEFAULT_TIMEOUT) -> list[MarketplaceFunction]:
+def search(
+    query: str | None = None,
+    *,
+    base_url: str | None = None,
+    category: str | None = None,
+    limit: int = 5,
+    timeout: float = DEFAULT_TIMEOUT,
+) -> list[MarketplaceFunction]:
     """Search the public marketplace. Returns [] on any failure.
 
-    The endpoint needs no authentication, so this works for every user.
+    The endpoint needs no authentication, so this works for every user. All
+    three filters are optional and compose: `base_url` scopes to one site,
+    `category` to one marketplace category, and `query` ranks within whatever
+    is left. At least one must be supplied — an unfiltered call would just
+    return the most-run functions overall, which is never what a caller here
+    wants.
+
+    `base_url` accepts any form the site is written in: a bare hostname, a
+    full URL, or a glob. Matching happens server-side and covers subdomains.
     """
-    query = (query or "").strip()
-    if not query:
+    params: dict[str, str | int] = {"limit": max(1, limit)}
+    if query and query.strip():
+        params["q"] = query.strip()
+    if base_url and base_url.strip():
+        params["base_url"] = base_url.strip()
+    if category and category.strip():
+        params["category"] = category.strip()
+
+    if not any(key in params for key in ("q", "base_url", "category")):
         return []
 
     try:
@@ -131,7 +153,7 @@ def search(query: str, *, limit: int = 5, timeout: float = DEFAULT_TIMEOUT) -> l
 
         response = requests.get(
             SEARCH_ENDPOINT,
-            params={"q": query, "limit": max(1, limit)},
+            params=params,
             timeout=timeout,
             headers={"User-Agent": _user_agent()},
         )
@@ -166,17 +188,18 @@ def search_for_site(
 ) -> list[MarketplaceFunction]:
     """Find existing functions for one site, with no false positives.
 
-    The public endpoint ranks results by relevance rather than filtering, so a
-    query that matches nothing still comes back full of unrelated functions.
-    We therefore discard every result whose own domain does not sit under the
-    target's registrable domain — a suggestion for the wrong site is worse
-    than no suggestion at all.
+    `base_url` scopes the search server-side and understands full URLs, so the
+    target is passed through untouched. `registrable_domain` is still consulted
+    first to skip inputs that are not sites at all (localhost, IP literals,
+    free text), and the results are re-checked against it afterwards: server-
+    side matching is deliberately fuzzy, and suggesting the wrong site is worse
+    than suggesting nothing.
     """
     domain = registrable_domain(url_or_host)
     if not domain:
         return []
 
-    matches = [fn for fn in search(domain, limit=max(limit * 4, 20), timeout=timeout) if _covers(fn.domain, domain)]
+    matches = [fn for fn in search(base_url=url_or_host, limit=limit, timeout=timeout) if _covers(fn.domain, domain)]
     matches.sort(key=lambda fn: fn.run_count, reverse=True)
     return matches[:limit]
 

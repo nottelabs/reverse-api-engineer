@@ -124,10 +124,33 @@ class TestSearch:
         assert calls[0].url == cloud.SEARCH_ENDPOINT
         assert "reverse-api-engineer" in calls[0].headers["User-Agent"]
 
+    def test_sends_base_url_and_category(self, fake_get):
+        calls = fake_get({"results": []})
+        cloud.search(base_url="nfl.com", category="Sports", limit=3)
+        assert calls[0].params == {"base_url": "nfl.com", "category": "Sports", "limit": 3}
+
+    def test_filters_compose(self, fake_get):
+        calls = fake_get({"results": []})
+        cloud.search("standings", base_url="nfl.com")
+        assert calls[0].params["q"] == "standings"
+        assert calls[0].params["base_url"] == "nfl.com"
+
     def test_blank_query_skips_the_call(self, fake_get):
         calls = fake_get({"results": [_result()]})
         assert cloud.search("   ") == []
         assert calls == []
+
+    def test_no_filters_skips_the_call(self, fake_get):
+        # An unfiltered call returns the most-run functions overall, which is
+        # never what a caller here means.
+        calls = fake_get({"results": [_result()]})
+        assert cloud.search() == []
+        assert calls == []
+
+    def test_blank_filters_are_dropped(self, fake_get):
+        calls = fake_get({"results": []})
+        cloud.search("  thing  ", base_url="   ", category="")
+        assert calls[0].params == {"q": "thing", "limit": 5}
 
     def test_non_200_returns_empty(self, fake_get):
         fake_get({"results": [_result()]}, status_code=500)
@@ -169,6 +192,14 @@ class TestSearch:
 class TestSearchForSite:
     """Domain-scoped lookups must never surface an unrelated site."""
 
+    def test_scopes_server_side_by_base_url(self, fake_get):
+        calls = fake_get({"results": []})
+        cloud.search_for_site("https://jobs.ashbyhq.com/openai?x=1")
+        # The endpoint understands full URLs, so the target is passed through
+        # untouched rather than reduced first.
+        assert calls[0].params["base_url"] == "https://jobs.ashbyhq.com/openai?x=1"
+        assert "q" not in calls[0].params
+
     def test_keeps_matching_domains_only(self, fake_get):
         fake_get(
             {
@@ -183,14 +214,9 @@ class TestSearchForSite:
         found = cloud.search_for_site("https://www.nfl.com/standings")
         assert [f.function_id for f in found] == ["b", "a"]
 
-    def test_queries_the_registrable_domain(self, fake_get):
-        calls = fake_get({"results": []})
-        cloud.search_for_site("https://jobs.ashbyhq.com/openai")
-        assert calls[0].params["q"] == "ashbyhq.com"
-
     def test_unrelated_results_yield_nothing(self, fake_get):
-        # The live endpoint ranks rather than filters, so a site it has never
-        # seen still comes back full of other people's functions.
+        # Server-side matching is deliberately fuzzy, so the domain guard stays
+        # as a backstop: a suggestion for the wrong site is worse than none.
         fake_get({"results": [_result(domain="paisabazaar.com"), _result(domain="ratings.fide.com")]})
         assert cloud.search_for_site("https://jobs.ashbyhq.com/openai") == []
 

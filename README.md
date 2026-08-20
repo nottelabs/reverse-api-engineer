@@ -172,6 +172,7 @@ reverse-api-engineer show <run_id> --json
 
 # Check whether a hosted function already covers a site (public, no account).
 reverse-api-engineer marketplace search --site https://www.nfl.com
+reverse-api-engineer marketplace search --category Jobs
 reverse-api-engineer marketplace search "nfl standings" --json | jq
 reverse-api-engineer run <run_id> --file api_client.py \
   --no-interactive --auto-install -- --org acme

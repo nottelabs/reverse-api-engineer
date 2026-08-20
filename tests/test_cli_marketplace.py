@@ -44,7 +44,24 @@ class TestMarketplaceSearchCommand:
             CliRunner().invoke(marketplace, ["search", "nfl", "-n", "3", "--json"])
         assert search.call_args.kwargs["limit"] == 3
 
-    def test_requires_a_query_or_site(self):
+    def test_category_flag_is_forwarded(self):
+        with patch("reverse_api.cli.cloud.search", return_value=[]) as search:
+            result = CliRunner().invoke(marketplace, ["search", "--category", "Jobs", "--json"])
+        assert result.exit_code == 0
+        assert search.call_args.kwargs["category"] == "Jobs"
+
+    def test_site_with_query_uses_composed_search(self):
+        # base_url and q compose server-side, so a combined request skips the
+        # domain-only helper.
+        with (
+            patch("reverse_api.cli.cloud.search", return_value=[]) as search,
+            patch("reverse_api.cli.cloud.search_for_site") as scoped,
+        ):
+            CliRunner().invoke(marketplace, ["search", "standings", "--site", "nfl.com", "--json"])
+        scoped.assert_not_called()
+        assert search.call_args.kwargs["base_url"] == "nfl.com"
+
+    def test_requires_a_query_site_or_category(self):
         result = CliRunner().invoke(marketplace, ["search"])
         assert result.exit_code == 2
 
