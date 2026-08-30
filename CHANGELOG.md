@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-08-30
+
+### Fixed
+- **`ModuleNotFoundError: No module named 'httpx'` on a fresh install**: `httpx` was imported at module top level in five modules but never declared as a dependency. It had always arrived transitively through `mcp`, which required `httpx` up to 1.x. `mcp` 2.0 switched to `httpx2` and `claude-agent-sdk` relaxed its pin to `mcp<3`, so new installs stopped resolving `httpx` entirely and every CLI invocation died at import time, `--version` included. Environments created before `mcp` 2.0 kept working, which is why the break only appeared for new users. The package now uses `httpx2` (imported as `httpx`) and declares `httpx2>=2.5.0` explicitly, matching what `mcp` 2.x already pulls in rather than installing a second HTTP client alongside it. ([#122](https://github.com/kalil0321/reverse-api-engineer/issues/122))
+
 ## [0.13.0] - 2026-07-27
 
 ### Added

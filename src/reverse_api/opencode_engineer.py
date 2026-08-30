@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import httpx
+import httpx2 as httpx
 
 from .base_engineer import BaseEngineer
 from .config import DEFAULT_OPENCODE_MODEL, DEFAULT_OPENCODE_PROVIDER

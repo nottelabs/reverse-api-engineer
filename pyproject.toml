@@ -1,6 +1,6 @@
 [project]
 name = "reverse-api-engineer"
-version = "0.13.0"
+version = "0.13.1"
 description = "The agent that turns websites into APIs."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -54,6 +54,7 @@ dependencies = [
     "aiohttp>=3.13.4",
     "pygments>=2.20.0",
     "cryptography>=46.0.7",
+    "httpx2>=2.5.0",
 ]
 
 [project.optional-dependencies]

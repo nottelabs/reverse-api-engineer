@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlparse
 
-import httpx
+import httpx2 as httpx
 
 from .utils import get_config_path
 

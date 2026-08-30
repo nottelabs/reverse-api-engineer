@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-import httpx
+import httpx2 as httpx
 
 from . import __version__
 

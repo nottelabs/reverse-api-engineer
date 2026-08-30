@@ -122,7 +122,7 @@ def default_model_for_configured_sdk(sdk: str | None = None) -> str:
 
 async def _load_opencode_catalog_for_settings() -> dict:
     """Start or reuse OpenCode and load its live provider/model catalog."""
-    import httpx
+    import httpx2 as httpx
 
     from .opencode_runtime import (
         ensure_opencode_server,
